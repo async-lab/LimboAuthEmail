@@ -33,48 +33,46 @@ class Commands(private val plugin: LimboAuthEmail) {
         this.plugin.limboAuth.authServer.registerCommand(LimboCommandMeta(this.plugin.settings.RECOVERY_COMMAND.map { command -> command.trimStart { it == '/' } }))
     }
 
-    private fun execute(context: CommandContext<CommandSource>): Int {
-        try {
-            val source = context.getSource()
-            if (source !is Player) {
-                source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.ONLY_PLAYER))
-                return Command.SINGLE_SUCCESS
-            }
-
-            val newEmail = context.getArgument("newEmail", String::class.java)
-
-            if (!Utils.isValidEmail(newEmail)) {
-                source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_INVALID))
-                return Command.SINGLE_SUCCESS
-            }
-
-            try {
-                val playerEmail =
-                    this.plugin.emailDao.queryForId(source.username.lowercase(Locale.getDefault()))
-                        ?: PlayerEmail(source, newEmail)
-
-                if (playerEmail.email == newEmail) {
-                    source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_UNCHANGED))
-                    return Command.SINGLE_SUCCESS
-                }
-
-                if (this.plugin.emailDao.queryForEq("email", newEmail).isNotEmpty()) {
-                    source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_USED))
-                    return Command.SINGLE_SUCCESS
-                }
-
-                playerEmail.email = newEmail
-                this.plugin.emailDao.update(playerEmail)
-
-                source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_CHANGED))
-            } catch (e: Exception) {
-                this.plugin.logger.error("更新邮箱失败", e)
-                source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.INTERNAL_ERROR))
-            }
-        } catch (e: Exception) {
-            this.plugin.logger.error("执行 /changeemail 出错", e)
+    private fun execute(ctx: CommandContext<CommandSource>): Int {
+        val source = ctx.source
+        if (source !is Player) {
+            source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.ONLY_PLAYER))
+            return Command.SINGLE_SUCCESS
         }
 
-        return Command.SINGLE_SUCCESS
+        val newEmail = ctx.getArgument("newEmail", String::class.java).trim()
+        if (!Utils.isValidEmail(newEmail)) {
+            source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_INVALID))
+            return Command.SINGLE_SUCCESS
+        }
+
+        val username = source.username.lowercase(Locale.getDefault())
+
+        return try {
+            val existing = plugin.emailDao.queryForId(username)
+
+            // 1. 邮箱未改变
+            if (existing?.email == newEmail) {
+                source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_UNCHANGED))
+                return Command.SINGLE_SUCCESS
+            }
+
+            // 2. 邮箱已存在别处
+            if (plugin.emailDao.queryForEq("email", newEmail).isNotEmpty()) {
+                source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_USED))
+                return Command.SINGLE_SUCCESS
+            }
+
+            // 3. 创建或更新
+            val updatedRecord = existing?.apply { email = newEmail } ?: PlayerEmail(source, newEmail)
+            plugin.emailDao.createOrUpdate(updatedRecord)
+
+            source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_CHANGED))
+            Command.SINGLE_SUCCESS
+        } catch (e: Exception) {
+            plugin.logger.error("更新邮箱失败", e)
+            source.sendMessage(plugin.getComponent(plugin.settings.STRINGS.INTERNAL_ERROR))
+            Command.SINGLE_SUCCESS
+        }
     }
 }

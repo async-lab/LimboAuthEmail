@@ -32,125 +32,120 @@ class EmailRegisterSessionHandler(
     }
 
     override fun onChat(message: String) {
-        val args = message.split(" ")
-        if (!args.isEmpty()) {
-            val command = args[0].lowercase()
-            when (command) {
-                in this.plugin.settings.REGISTER_COMMAND -> {
-                    if (this.playerInfo != null) {
-                        super.onChat(message)
-                        return
-                    }
+        val args = message.trim().split(" ")
+        if (args.isEmpty()) {
+            super.onChat(message)
+            return
+        }
 
-                    // 只接受邮箱
-                    if (args.size < 3) {
-                        super.onChat("")
-                        return
-                    }
-                    val email = args[1]
-                    val repeatedEmail = args[2]
-                    if (!listOf(email, repeatedEmail).all(Utils::isValidEmail)) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_INVALID))
-                        return
-                    }
-
-                    if (email != repeatedEmail) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.REPEATED_EMAIL_NOT_MATCH))
-                        return
-                    }
-
-                    if (this.plugin.emailDao.queryForEq("email", email).isNotEmpty()) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_USED))
-                        return
-                    }
-
-                    val tempPassword = Utils.generateTempPassword()
-                    this.plugin.mailManager.sendMail(
-                        email,
-                        this.plugin.emailTemplateRegister,
-                        mapOf(
-                            "servername" to this.plugin.settings.SERVER_NAME,
-                            "playername" to this.proxyPlayer.username,
-                            "generatedpass" to tempPassword
-                        )
-                    )
-
-                    val registeredPlayer = RegisteredPlayer(proxyPlayer).setPassword(tempPassword)
-                    val playerEmail = PlayerEmail(proxyPlayer, email)
-                    try {
-                        this.limboAuth.playerDao.create(registeredPlayer)
-                        this.plugin.emailDao.create(playerEmail)
-                        this.playerInfo = registeredPlayer
-                    } catch (e: SQLException) {
-                        this.proxyPlayer.disconnect(this.plugin.getComponent(this.plugin.settings.STRINGS.INTERNAL_ERROR))
-                        this.plugin.logger.error(e.message)
-                        return
-                    }
-
-                    this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.REGISTER_SUCCESSFUL))
-                    this.limboAuth.server.eventManager
-                        .fire(PostRegisterEvent(null, this.limboPlayer, registeredPlayer, tempPassword))
-                }
-
-                in this.plugin.settings.RECOVERY_COMMAND -> {
-                    if (this.playerInfo == null) {
-                        super.onChat("")
-                        return
-                    }
-                    val args = message.split(" ")
-
-                    if (args.size < 2) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.RECOVERY))
-                        return
-                    }
-
-                    val email = args[1]
-                    if (!Utils.isValidEmail(email)) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_INVALID))
-                        return
-                    }
-
-                    val playerEmail: PlayerEmail? = try {
-                        this.plugin.emailDao.queryForId(this.proxyPlayer.username.lowercase())
-                    } catch (e: SQLException) {
-                        this.proxyPlayer.disconnect(this.plugin.getComponent(this.plugin.settings.STRINGS.INTERNAL_ERROR))
-                        this.plugin.logger.error(e.message)
-                        return
-                    }
-
-                    if (playerEmail == null) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.NO_EMAIL))
-                        return
-                    }
-
-                    if (playerEmail.email != email) {
-                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_NOT_MATCH))
-                        return
-                    }
-
-                    val tempPassword = Utils.generateTempPassword()
-                    this.playerInfo = this.playerInfo!!.setPassword(tempPassword)
-                    try {
-                        this.limboAuth.playerDao.update(this.playerInfo)
-                    } catch (e: SQLException) {
-                        this.proxyPlayer.disconnect(this.plugin.getComponent(this.plugin.settings.STRINGS.INTERNAL_ERROR))
-                        this.plugin.logger.error(e.message)
-                        return
-                    }
-                    this.plugin.mailManager.sendMail(
-                        email,
-                        this.plugin.emailTemplateRegister,
-                        mapOf(
-                            "servername" to this.plugin.settings.SERVER_NAME,
-                            "playername" to this.proxyPlayer.username,
-                            "generatedpass" to tempPassword
-                        )
-                    )
-                    this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.RECOVERY_SUCCESSFUL))
-                }
-            }
+        when (args[0].lowercase()) {
+            in plugin.settings.REGISTER_COMMAND -> handleRegister(args)
+            in plugin.settings.RECOVERY_COMMAND -> handleRecovery(args)
         }
 
         super.onChat(message)
+    }
+
+    /** 注册命令逻辑 */
+    private fun handleRegister(args: List<String>) {
+        // 已经注册过
+        if (playerInfo != null) return super.onChat("")
+
+        if (args.size < 3) return super.onChat("")
+
+        val email = args[1]
+        val repeatEmail = args[2]
+
+        if (!Utils.isValidEmail(email) || !Utils.isValidEmail(repeatEmail)) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_INVALID))
+            return
+        }
+        if (email != repeatEmail) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.REPEATED_EMAIL_NOT_MATCH))
+            return
+        }
+        if (plugin.emailDao.queryForEq("email", email).isNotEmpty()) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_USED))
+            return
+        }
+
+        // 生成密码 & 发邮件
+        val tempPassword = Utils.generateTempPassword()
+        plugin.mailManager.sendMail(
+            email, plugin.emailTemplateRegister, mapOf(
+                "servername" to plugin.settings.SERVER_NAME,
+                "playername" to proxyPlayer.username,
+                "generatedpass" to tempPassword
+            )
+        )
+
+        val registeredPlayer = RegisteredPlayer(proxyPlayer).setPassword(tempPassword)
+        val playerEmail = PlayerEmail(proxyPlayer, email)
+
+        try {
+            limboAuth.playerDao.create(registeredPlayer)
+            plugin.emailDao.create(playerEmail)
+            playerInfo = registeredPlayer
+        } catch (e: SQLException) {
+            proxyPlayer.disconnect(plugin.getComponent(plugin.settings.STRINGS.INTERNAL_ERROR))
+            plugin.logger.error(e.message)
+            return
+        }
+
+        proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.REGISTER_SUCCESSFUL))
+        limboAuth.server.eventManager.fire(PostRegisterEvent(null, limboPlayer, registeredPlayer, tempPassword))
+    }
+
+    /** 密码找回逻辑 */
+    private fun handleRecovery(args: List<String>) {
+        if (playerInfo == null) return super.onChat("")
+
+        if (args.size < 2) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.RECOVERY))
+            return
+        }
+
+        val email = args[1]
+        if (!Utils.isValidEmail(email)) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_INVALID))
+            return
+        }
+
+        val storedEmail = try {
+            plugin.emailDao.queryForId(proxyPlayer.username.lowercase())
+        } catch (e: SQLException) {
+            proxyPlayer.disconnect(plugin.getComponent(plugin.settings.STRINGS.INTERNAL_ERROR))
+            plugin.logger.error(e.message)
+            return
+        }
+
+        if (storedEmail == null) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.NO_EMAIL))
+            return
+        }
+        if (storedEmail.email != email) {
+            proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.EMAIL_NOT_MATCH))
+            return
+        }
+
+        val tempPassword = Utils.generateTempPassword()
+        playerInfo = playerInfo!!.setPassword(tempPassword)
+
+        try {
+            limboAuth.playerDao.update(playerInfo)
+        } catch (e: SQLException) {
+            proxyPlayer.disconnect(plugin.getComponent(plugin.settings.STRINGS.INTERNAL_ERROR))
+            plugin.logger.error(e.message)
+            return
+        }
+
+        plugin.mailManager.sendMail(
+            email, plugin.emailTemplateRegister, mapOf(
+                "servername" to plugin.settings.SERVER_NAME,
+                "playername" to proxyPlayer.username,
+                "generatedpass" to tempPassword
+            )
+        )
+        proxyPlayer.sendMessage(plugin.getComponent(plugin.settings.STRINGS.RECOVERY_SUCCESSFUL))
     }
 }
