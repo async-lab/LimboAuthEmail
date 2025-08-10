@@ -83,7 +83,7 @@ class EmailRegisterSessionHandler(
 
         try {
             limboAuth.playerDao.create(registeredPlayer)
-            plugin.emailDao.create(playerEmail)
+            plugin.emailDao.createOrUpdate(playerEmail)
             playerInfo = registeredPlayer
         } catch (e: SQLException) {
             proxyPlayer.disconnect(plugin.getComponent(plugin.settings.STRINGS.INTERNAL_ERROR))
