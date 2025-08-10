@@ -64,7 +64,7 @@ class EmailRegisterSessionHandler(
                         email,
                         this.plugin.emailTemplateRegister,
                         mapOf(
-                            "severname" to this.plugin.settings.SERVER_NAME,
+                            "servername" to this.plugin.settings.SERVER_NAME,
                             "playername" to this.proxyPlayer.username,
                             "generatedpass" to tempPassword
                         )
@@ -136,14 +136,14 @@ class EmailRegisterSessionHandler(
                         email,
                         this.plugin.emailTemplateRegister,
                         mapOf(
-                            "severname" to this.plugin.settings.SERVER_NAME,
+                            "servername" to this.plugin.settings.SERVER_NAME,
                             "playername" to this.proxyPlayer.username,
                             "generatedpass" to tempPassword
                         )
                     )
+                    this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.RECOVERY_SUCCESSFUL))
                 }
             }
-
         }
 
         super.onChat(message)
