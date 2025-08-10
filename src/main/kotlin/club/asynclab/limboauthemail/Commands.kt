@@ -53,6 +53,16 @@ class Commands(private val plugin: LimboAuthEmail) {
                     this.plugin.emailDao.queryForId(source.username.lowercase(Locale.getDefault()))
                         ?: PlayerEmail(source, newEmail)
 
+                if (playerEmail.email == newEmail) {
+                    source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_UNCHANGED))
+                    return Command.SINGLE_SUCCESS
+                }
+
+                if (this.plugin.emailDao.queryForEq("email", newEmail).isNotEmpty()) {
+                    source.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_USED))
+                    return Command.SINGLE_SUCCESS
+                }
+
                 playerEmail.email = newEmail
                 this.plugin.emailDao.update(playerEmail)
 

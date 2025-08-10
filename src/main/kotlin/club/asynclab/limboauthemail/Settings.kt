@@ -35,6 +35,8 @@ class Settings(private val config: Config) {
         val EMAIL_NOT_MATCH = rootConfig.node("strings", "email-not-match").getString("")
         val NO_EMAIL = rootConfig.node("strings", "no-email").getString("")
         val ONLY_PLAYER = rootConfig.node("strings", "only-player").getString("")
+        val EMAIL_UNCHANGED = rootConfig.node("strings", "email-unchanged").getString("")
         val EMAIL_CHANGED = rootConfig.node("strings", "email-changed").getString("")
+        val EMAIL_USED = rootConfig.node("strings", "email-used").getString("")
     }
 }

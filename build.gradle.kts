@@ -21,6 +21,7 @@ repositories {
 }
 
 val shade: Configuration by configurations.creating
+val fullShade: Configuration by configurations.creating
 
 dependencies {
     compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
@@ -31,7 +32,7 @@ dependencies {
     compileOnly("net.elytrium.limboapi:api:1.1.26")
 //    compileOnly("net.elytrium:limboauth:1.1.14")
     compileOnly("com.github.dsx137:LimboAuth:master-SNAPSHOT")
-    shade("com.sun.mail:jakarta.mail:2.0.1")
+    fullShade("com.sun.mail:jakarta.mail:2.0.1")
     implementation("com.sun.mail:jakarta.mail:2.0.1")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -70,7 +71,12 @@ project.idea.project.settings.taskTriggers.afterSync(generateTemplates)
 project.eclipse.synchronizationTasks(generateTemplates)
 
 tasks.shadowJar {
-//    minimize()
+    minimize {
+        fullShade.dependencies.forEach { exclude(dependency(it)) }
+    }
+
     mergeServiceFiles()
-    configurations = listOf(shade)
+    configurations = listOf(shade, fullShade)
 }
+
+tasks.build { dependsOn("shadowJar") }

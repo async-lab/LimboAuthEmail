@@ -24,4 +24,6 @@ strings:
   email-not-match: "{PRFX} <red>输入的邮箱与绑定的邮箱不匹配。</red>"
   no-email: "{PRFX} <red>您没有绑定邮箱。</red>"
   only-player: "{PRFX} <red>只有玩家才能执行此命令。</red>"
+  email-unchanged: "{PRFX} <red>邮箱无变化。</red>"
   email-changed: "{PRFX} <green>邮箱已修改成功。</green>"
+  email-used: "{PRFX} <red>此邮箱已被使用。</red>"

@@ -59,6 +59,11 @@ class EmailRegisterSessionHandler(
                         return
                     }
 
+                    if (this.plugin.emailDao.queryForEq("email", email).isNotEmpty()) {
+                        this.proxyPlayer.sendMessage(this.plugin.getComponent(this.plugin.settings.STRINGS.EMAIL_USED))
+                        return
+                    }
+
                     val tempPassword = Utils.generateTempPassword()
                     this.plugin.mailManager.sendMail(
                         email,
