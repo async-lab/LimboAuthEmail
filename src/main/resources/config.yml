@@ -1,0 +1,27 @@
+server-name: "Asyncraft"
+prefix: "LimboAuth <gold>>></gold>"
+register-command:
+  - "/r"
+  - "/reg"
+  - "/register"
+recovery-command:
+  - "/recovery"
+smtp:
+  host: smtp.163.com
+  port: 587
+  tls: true
+  account: account
+  password: password
+  sender: sender
+  subject: subject
+strings:
+  email-invalid: "{PRFX} <red>邮箱格式错误</red>"
+  repeated-email-not-match: "{PRFX} <red>两次输入的邮箱不匹配</red>"
+  register-successful: "{PRFX} <green>注册成功！</green>"
+  internal-error: "{PRFX} <red>服务器内部错误</red>"
+  recovery: "{PRFX} 用法: <gold>/recovery <邮箱></gold>"
+  recovery-successful: "{PRFX} <green>新密码已发送到您的邮箱，请注意查收。</green>"
+  email-not-match: "{PRFX} <red>输入的邮箱与绑定的邮箱不匹配。</red>"
+  no-email: "{PRFX} <red>您没有绑定邮箱。</red>"
+  only-player: "{PRFX} <red>只有玩家才能执行此命令。</red>"
+  email-changed: "{PRFX} <green>邮箱已修改成功。</green>"

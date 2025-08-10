@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>您的新密码</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, 'Microsoft Yahei', 'Hiragino Sans GB', 'Heiti SC', 'WenQuanYi Micro Hei', sans-serif;
+            background-color: #f4f4f7;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #4CAF50; /* 绿色，代表成功和安全 */
+            color: #ffffff;
+            padding: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 0 0 15px;
+        }
+        .password-box {
+            background-color: #fdf8e1; /* 温和的黄色背景，引起注意 */
+            border: 1px dashed #fce38a;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .password {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c0392b; /* 醒目的红色 */
+            letter-spacing: 2px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .instruction {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #495057;
+            display: inline-block; /* 让背景色包裹代码 */
+            word-break: break-all; /* 防止长指令撑破容器 */
+        }
+        .warning {
+            color: #E67E22;
+            font-weight: bold;
+        }
+        .footer {
+            background-color: #f4f4f7;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+        .signature {
+            margin-top: 30px;
+            line-height: 1.5;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>您的新密码已生成</h1>
+    </div>
+    <div class="content">
+        <p><strong>你好,
+            <playername/>
+            ！</strong></p>
+        <p>您在 <strong>
+            <servername/>
+        </strong> 的新密码已经准备就绪。
+        </p>
+
+        <div class="password-box">
+            <span style="font-size: 14px; color: #555;">您的临时密码是</span>
+            <span class="password"><generatedpass/></span>
+        </div>
+
+        <p class="warning">重要提示：为了您的账户安全，请在登录后立即使用以下指令修改为您自己的密码！</p>
+
+        <p>
+            <code class="instruction">/changepassword 您的新密码</code>
+        </p>
+
+        <p>我们期待在 <strong>
+            <servername/>
+        </strong> 见到你！
+        </p>
+
+        <div class="signature">
+            祝你玩得开心！<br>
+            <strong>Canti</strong>
+        </div>
+    </div>
+    <div class="footer">
+        这是一封自动发送的邮件，请勿直接回复。
+    </div>
+</div>
+</body>
+</html>
