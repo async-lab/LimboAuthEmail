@@ -41,9 +41,8 @@ class EmailRegisterSessionHandler(
         when (args[0].lowercase()) {
             in plugin.settings.REGISTER_COMMAND -> handleRegister(args)
             in plugin.settings.RECOVERY_COMMAND -> handleRecovery(args)
+            else -> super.onChat(message)
         }
-
-        super.onChat(message)
     }
 
     /** 注册命令逻辑 */
